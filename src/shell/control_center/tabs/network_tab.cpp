@@ -849,9 +849,8 @@ std::unique_ptr<Flex> NetworkTab::create() {
         scrollView.clearBorder();
       },
   });
-  // The password card lives inside the scroll view so a tall 802.1X form can be
-  // scrolled instead of being clipped by the fixed panel height. The list gets
-  // its own column because rebuildApList() clears it wholesale.
+  // The password card scrolls with the list so a tall 802.1X form stays reachable.
+  // m_list is a separate column because rebuildApList() clears all of its children.
   Flex* scrollContent = listScroll->content();
   scrollContent->setDirection(FlexDirection::Vertical);
   scrollContent->setAlign(FlexAlign::Stretch);
