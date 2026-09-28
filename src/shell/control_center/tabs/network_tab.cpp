@@ -836,7 +836,6 @@ std::unique_ptr<Flex> NetworkTab::create() {
   );
 
   passwordCard->addChild(std::move(inputRow));
-  tab->addChild(std::move(passwordCard));
 
   auto listScroll = ui::scrollView({
       .out = &m_listScroll,
@@ -850,10 +849,21 @@ std::unique_ptr<Flex> NetworkTab::create() {
         scrollView.clearBorder();
       },
   });
-  m_list = listScroll->content();
-  m_list->setDirection(FlexDirection::Vertical);
-  m_list->setAlign(FlexAlign::Stretch);
-  m_list->setGap(Style::spaceMd * scale);
+  // The password card lives inside the scroll view so a tall 802.1X form can be
+  // scrolled instead of being clipped by the fixed panel height. The list gets
+  // its own column because rebuildApList() clears it wholesale.
+  Flex* scrollContent = listScroll->content();
+  scrollContent->setDirection(FlexDirection::Vertical);
+  scrollContent->setAlign(FlexAlign::Stretch);
+  scrollContent->setGap(Style::spaceMd * scale);
+  scrollContent->addChild(std::move(passwordCard));
+  scrollContent->addChild(
+      ui::column({
+          .out = &m_list,
+          .align = FlexAlign::Stretch,
+          .gap = Style::spaceMd * scale,
+      })
+  );
 
   tab->addChild(std::move(listScroll));
   return tab;
@@ -1029,6 +1039,9 @@ void NetworkTab::showPasswordPrompt(const AccessPointInfo& ap) {
     // Say up front when this network cannot be joined with a password, rather
     // than after the user has filled in the whole form.
     setCredentialError(enterpriseBlockReason(ap));
+  }
+  if (m_listScroll != nullptr) {
+    m_listScroll->setScrollOffset(0.0F);
   }
   PanelManager::instance().requestLayout();
 }
